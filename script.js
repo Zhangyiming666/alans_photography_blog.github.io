@@ -20,6 +20,9 @@ const atlasLayoutNode = document.querySelector(".atlas-layout");
 const areaChartNode = document.querySelector("#chinaMap");
 const mapStageNode = document.querySelector(".map-stage");
 const mapStatus = document.querySelector("#mapStatus");
+const coverStoryNode = document.querySelector("#coverStory");
+const storyBackdropNode = document.querySelector("#storyBackdrop");
+const storyStageNode = document.querySelector("#storyStage");
 const breadcrumbNode = document.querySelector("#breadcrumb");
 const areaTitleNode = document.querySelector("#areaTitle");
 const regionPanelNode = document.querySelector(".region-panel");
@@ -52,7 +55,74 @@ const appState = {
   zoom: 1.05,
 };
 
+const geoJSONCache = new Map();
+const albumPhotoCountCache = new Map();
+const recentAlbumsCache = new Map();
 let pendingChartResizeFrame = 0;
+let storyTrackMotionFrame = 0;
+let storyTrackCurrentOffset = 0;
+let storyTrackTargetOffset = 0;
+const STORY_TRACK_REPEATS = 5;
+
+const STORY_ROW_SETTINGS = [
+  { speed: -0.7, lift: -34 },
+  { speed: 0.92, lift: 18 },
+  { speed: -1.08, lift: -6 },
+  { speed: 0.84, lift: 28 },
+  { speed: -0.96, lift: 8 },
+];
+const STORY_COVER_SOURCES = [
+  "./assets/photos/072d124aae166ff8880594b269429815.jpg",
+  "./assets/photos/34333706e92f68c7ae9fa21df6f78eb8.jpg",
+  "./assets/photos/5310ba3f4e558dd866562f00931efa16.jpg",
+  "./assets/photos/701abd6fe18ce3e43650cbec2f6f3eed.jpg",
+  "./assets/photos/bc2c8a567dbff5c9a4b8fc6355b1f57e.jpg",
+  "./assets/photos/e33ea68ee1e9be03cdc2fb3bda82ff39.jpg",
+  "./assets/photos/066da647854c7cc3f736623024c0f867.jpg",
+  "./assets/photos/196103b279a3ddc1a2ffd4a57a96c32b.jpg",
+  "./assets/photos/44b1e00ce82ccc4b1a3c337879b7015a.jpg",
+  "./assets/photos/942e430c7f938588d9f7aae579f7427a.jpg",
+  "./assets/photos/b67ed450a01c35f93f2dd71590d3df89.jpg",
+  "./assets/photos/ba1f44775ed5b9aa968ecee3d2bf2fca.jpg",
+  "./assets/photos/bac6d8ee05999498a3b0cb65b46bddc1.jpg",
+  "./assets/photos/f1ff5f2179ec7b5559e10251eec3cf23.jpg",
+  "./assets/photos/0cb2b8b93419de860001d595ca1718c5.jpg",
+  "./assets/photos/2697fe00b7afae9b0c743388b095db98.jpg",
+  "./assets/photos/28a0ca90278ba814b3b1e038a3c4e519.jpg",
+  "./assets/photos/46d29377220fbae81704781ea3129d73.jpg",
+  "./assets/photos/a725133d0434f8e8ba92cbd9ddc17abe.jpg",
+  "./assets/photos/fee4b317663ab162cea218f8d83d14b2.jpg",
+  "./assets/photos/0cdff5bf2bc741ce06f1e83bb6eb3c7c.jpg",
+  "./assets/photos/1c115cae0b8f3a08f34a27f4ef2f0286.jpg",
+  "./assets/photos/2f4ec1f1fcac1ef5a72ebe58433aecc7.jpg",
+  "./assets/photos/43c6b1da6291d5dcf1c431d475c372f0.jpg",
+  "./assets/photos/6521d43698e3f1f0d6f6d2be3aa29d1d.jpg",
+  "./assets/photos/9d69c7fc19bd217a18d431772e81afa1.jpg",
+  "./assets/photos/a1275fc30684830461a3d246454df80d.jpg",
+  "./assets/photos/d150162191c00b1a21d21fa36ef23d96.jpg",
+  "./assets/photos/dadb8967c23ec088d078342208093dc8.jpg",
+  "./assets/photos/12c10580ef13a08aadf4bc2d222d4315.jpg",
+  "./assets/photos/208d9145cfadcba3bd29f68a8ec77d24.jpg",
+  "./assets/photos/3129a9ac7bfecf2f592f27e40b7841db.jpg",
+  "./assets/photos/38f43eb63b1c6cff373c50e88eef3cb0.jpg",
+  "./assets/photos/4cfe19255836fdbda1824b21106fda49.jpg",
+  "./assets/photos/9d35ab808efe5a19e54af2822a3a6339.jpg",
+  "./assets/photos/d64309798e431edf0f33cc3b92b52914.jpg",
+  "./assets/photos/44fd9c1d063124fe6c5a058228439b31.jpg",
+  "./assets/photos/7b51c6631d6bfffbe4dd49d6593a5351.jpg",
+  "./assets/photos/83e2d799704e7efd8878b150db38962e.jpg",
+  "./assets/photos/af2d1513a0c2c01161c78ebf8e0ef748.jpg",
+  "./assets/photos/c0b5789ec966c17e9944047cd4ea8961.jpg",
+  "./assets/photos/cccc80dca550570e25495ad0e4819486.jpg",
+  "./assets/photos/70fbe8034c536cc0e8ccfc9dcd737544.jpg",
+  "./assets/photos/7757ffb5b1331ef97f29251b692cace6.jpg",
+  "./assets/photos/c84212cd7eb50447496b5210631b7691.jpg",
+  "./assets/photos/04a7a7ce8e42b96039b0296bdce542e1.jpg",
+  "./assets/photos/1b526573ca0ae172fe7628f2f6758cde.jpg",
+  "./assets/photos/7523d08d9641ccb2041a175c4a24dc3b.jpg",
+  "./assets/photos/7fffdeebc14110a07282a65a9a55e672.jpg",
+  "./assets/photos/92b19f06c2f819b9815329e95013b901.jpg",
+];
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -70,6 +140,9 @@ const getBoundaryUrls = (adcode) =>
   GEO_DATA_SOURCES.map((baseUrl) => `${baseUrl}/${adcode}_full.json`);
 
 const normalizeAdcode = (value) => String(value || "");
+
+const getStoryCoverAsset = (src) =>
+  String(src || "").replace("./assets/photos/", "./assets/photos/story-cover/");
 
 const getFeatureAdcode = (feature) =>
   normalizeAdcode(
@@ -123,14 +196,15 @@ const isAlbumWithinArea = (targetAdcode, areaAdcode) => {
   return getAreaPrefix(normalizedTarget).startsWith(getAreaPrefix(normalizedArea));
 };
 
-const getCatalogAlbums = () =>
-  Object.entries(photoCatalog).flatMap(([ownerAdcode, albums]) =>
-    albums.map((album, albumIndex) => ({
-      ...album,
-      ownerAdcode,
-      catalogKey: getAlbumKey(album, `${ownerAdcode}-${albumIndex}`),
-    }))
-  );
+const catalogAlbums = Object.entries(photoCatalog).flatMap(([ownerAdcode, albums]) =>
+  albums.map((album, albumIndex) => ({
+    ...album,
+    ownerAdcode,
+    catalogKey: getAlbumKey(album, `${ownerAdcode}-${albumIndex}`),
+  }))
+);
+
+const getCatalogAlbums = () => catalogAlbums;
 
 const isPlaceholderAsset = (photo) => {
   const source = typeof photo === "string" ? photo : photo?.src;
@@ -191,26 +265,88 @@ const getAlbumJumpArea = (album) => {
 };
 
 const getRecentAlbums = (limit = 4) =>
-  getCatalogAlbums()
-    .filter((album) => getShotOnValue(album.shotOn) > 0 && getAssetCount(album, { includePlaceholders: false }) > 0)
-    .sort((left, right) => getShotOnValue(right.shotOn) - getShotOnValue(left.shotOn))
-    .slice(0, limit);
+  {
+    if (recentAlbumsCache.has(limit)) {
+      return recentAlbumsCache.get(limit);
+    }
 
-const getPhotoCountForArea = (adcode) =>
-  getCatalogAlbums()
+    const result = getCatalogAlbums()
+      .filter(
+        (album) =>
+          getShotOnValue(album.shotOn) > 0 && getAssetCount(album, { includePlaceholders: false }) > 0
+      )
+      .sort((left, right) => getShotOnValue(right.shotOn) - getShotOnValue(left.shotOn))
+      .slice(0, limit);
+
+    recentAlbumsCache.set(limit, result);
+    return result;
+  };
+
+const getAllRealPhotos = () => {
+  if (appState.allRealPhotos) {
+    return appState.allRealPhotos;
+  }
+
+  const uniquePhotos = new Map();
+
+  getCatalogAlbums().forEach((album) => {
+    const area = getAlbumJumpArea(album);
+    const normalizedAlbum = normalizeAlbum(album, area);
+
+    normalizedAlbum.photos
+      .filter((photo) => !isPlaceholderAsset(photo))
+      .forEach((photo) => {
+        if (!uniquePhotos.has(photo.src)) {
+          uniquePhotos.set(photo.src, photo);
+        }
+      });
+  });
+
+  appState.allRealPhotos = [...uniquePhotos.values()];
+  return appState.allRealPhotos;
+};
+
+const getStoryCoverPhotos = () => {
+  if (appState.storyCoverPhotos) {
+    return appState.storyCoverPhotos;
+  }
+
+  const photoMap = new Map(getAllRealPhotos().map((photo) => [photo.src, photo]));
+  appState.storyCoverPhotos = STORY_COVER_SOURCES.map((src, index) => {
+    const photo = photoMap.get(src) || { src, alt: `首页照片流 ${index + 1}` };
+
+    return {
+      ...photo,
+      coverSrc: getStoryCoverAsset(src),
+    };
+  });
+
+  return appState.storyCoverPhotos;
+};
+
+const getPhotoCountForArea = (adcode) => {
+  const normalizedAdcode = normalizeAdcode(adcode);
+
+  if (albumPhotoCountCache.has(normalizedAdcode)) {
+    return albumPhotoCountCache.get(normalizedAdcode);
+  }
+
+  const total = getCatalogAlbums()
     .filter((album, albumIndex, albums) => {
       const targets = [album.ownerAdcode, ...(Array.isArray(album.areas) ? album.areas : [])];
-      const matchesArea = targets.some((targetAdcode) => isAlbumWithinArea(targetAdcode, adcode));
+      const matchesArea = targets.some((targetAdcode) => isAlbumWithinArea(targetAdcode, normalizedAdcode));
 
       if (!matchesArea) {
         return false;
       }
 
-      return (
-        albumIndex === albums.findIndex((item) => item.catalogKey === album.catalogKey)
-      );
+      return albumIndex === albums.findIndex((item) => item.catalogKey === album.catalogKey);
     })
-    .reduce((total, album) => total + getAssetCount(album, { includePlaceholders: false }), 0);
+    .reduce((sum, album) => sum + getAssetCount(album, { includePlaceholders: false }), 0);
+
+  albumPhotoCountCache.set(normalizedAdcode, total);
+  return total;
+};
 
 const hasPhotosInArea = (adcode) => getPhotoCountForArea(adcode) > 0;
 
@@ -266,6 +402,179 @@ const getAlbumsForArea = (area) => {
   return mergedAlbums.map((album) => normalizeAlbum(album, area));
 };
 
+const renderStoryBackdrop = (photos) => {
+  if (!storyBackdropNode || !Array.isArray(photos) || !photos.length) {
+    return;
+  }
+
+  const rows = 5;
+  const distributedPhotos = Array.from({ length: rows }, () => []);
+  const rotatePattern = [-6, 4, -3, 6, -5, 3, -2, 5];
+  const shiftPattern = [-18, 14, -8, 22, -12, 16, -6, 20];
+  const overlapPattern = [40, 62, 48, 70, 44, 58, 36, 66];
+  const widthPattern = [
+    "clamp(190px, 14vw, 270px)",
+    "clamp(220px, 15vw, 310px)",
+    "clamp(176px, 12vw, 248px)",
+    "clamp(208px, 14vw, 292px)",
+  ];
+  const widthPatternMobile = ["148px", "168px", "142px", "160px"];
+
+  photos.forEach((photo, index) => {
+    distributedPhotos[index % rows].push(photo);
+  });
+
+  storyBackdropNode.innerHTML = distributedPhotos
+    .map((rowPhotos, rowIndex) => {
+      const fallbackPhotos = photos.slice(rowIndex * 8, rowIndex * 8 + 12);
+      const sourcePhotos = rowPhotos.length ? rowPhotos : fallbackPhotos;
+
+      return `
+        <div class="story-track">
+          <div class="story-track-inner" data-story-row="${rowIndex}">
+            ${Array.from({ length: STORY_TRACK_REPEATS }, (_, segmentIndex) => `
+              <div class="story-track-segment" data-story-segment="${segmentIndex}">
+                ${sourcePhotos
+                  .map((photo, photoIndex) => {
+                    const patternIndex = (photoIndex + rowIndex) % rotatePattern.length;
+
+                    return `
+                      <figure
+                        class="story-photo-frame"
+                        style="
+                          --frame-rotate: ${rotatePattern[patternIndex]}deg;
+                          --frame-shift-y: ${shiftPattern[patternIndex]}px;
+                          --frame-overlap: ${overlapPattern[patternIndex]}px;
+                          --frame-width: ${widthPattern[(photoIndex + rowIndex) % widthPattern.length]};
+                          --frame-width-mobile: ${widthPatternMobile[(photoIndex + rowIndex) % widthPatternMobile.length]};
+                        "
+                      >
+                        <img
+                          src="${escapeHtml(photo.coverSrc || photo.src)}"
+                          alt="${escapeHtml(photo.alt || photo.title || "照片流背景")}"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </figure>
+                    `;
+                  })
+                  .join("")}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+};
+
+const applyStoryTrackMotion = () => {
+  if (!storyBackdropNode) {
+    return;
+  }
+
+  storyBackdropNode.querySelectorAll(".story-track-inner").forEach((track, trackIndex) => {
+    const rowSetting = STORY_ROW_SETTINGS[trackIndex % STORY_ROW_SETTINGS.length];
+    const loopWidth = Number(track.dataset.loopWidth || 0);
+    const anchorOffset = Number(track.dataset.anchorOffset || 0);
+    let translateX = storyTrackCurrentOffset * rowSetting.speed;
+
+    if (loopWidth > 0) {
+      const wrappedOffset = ((translateX % loopWidth) + loopWidth) % loopWidth;
+      translateX = anchorOffset - wrappedOffset;
+    }
+
+    track.style.transform = `translate3d(${translateX}px, ${rowSetting.lift}px, 0)`;
+  });
+};
+
+const measureStoryTrackLoops = () => {
+  if (!storyBackdropNode) {
+    return;
+  }
+
+  storyBackdropNode.querySelectorAll(".story-track-inner").forEach((track) => {
+    const firstSegment = track.querySelector(".story-track-segment");
+    const loopWidth = firstSegment?.getBoundingClientRect().width || 0;
+
+    if (!loopWidth) {
+      return;
+    }
+
+    track.dataset.loopWidth = String(loopWidth);
+    track.dataset.anchorOffset = String(-loopWidth * Math.floor(STORY_TRACK_REPEATS / 2));
+  });
+
+  applyStoryTrackMotion();
+};
+
+const animateStoryTrackMotion = () => {
+  const delta = storyTrackTargetOffset - storyTrackCurrentOffset;
+
+  storyTrackCurrentOffset += delta * 0.1;
+  applyStoryTrackMotion();
+
+  if (Math.abs(delta) < 0.4) {
+    storyTrackCurrentOffset = storyTrackTargetOffset;
+    applyStoryTrackMotion();
+    storyTrackMotionFrame = 0;
+    return;
+  }
+
+  storyTrackMotionFrame = window.requestAnimationFrame(animateStoryTrackMotion);
+};
+
+const nudgeStoryTrackMotion = (delta) => {
+  storyTrackTargetOffset += delta;
+
+  if (storyTrackMotionFrame) {
+    return;
+  }
+
+  storyTrackMotionFrame = window.requestAnimationFrame(animateStoryTrackMotion);
+};
+
+const bindStoryWheelMotion = () => {
+  if (!coverStoryNode) {
+    return;
+  }
+
+  const onWheel = (event) => {
+    const bounds = coverStoryNode.getBoundingClientRect();
+    const isActive = bounds.top < window.innerHeight && bounds.bottom > 0;
+
+    if (!isActive) {
+      return;
+    }
+
+    const delta = (event.deltaY + event.deltaX) * 0.75;
+    nudgeStoryTrackMotion(delta);
+  };
+
+  window.addEventListener("wheel", onWheel, { passive: true });
+};
+
+const setupStoryCover = () => {
+  if (!coverStoryNode || !storyBackdropNode || !storyStageNode) {
+    return;
+  }
+
+  const photos = getStoryCoverPhotos();
+
+  if (!photos.length) {
+    coverStoryNode.hidden = true;
+    return;
+  }
+
+  renderStoryBackdrop(photos);
+  window.requestAnimationFrame(() => {
+    measureStoryTrackLoops();
+    applyStoryTrackMotion();
+  });
+  bindStoryWheelMotion();
+  window.addEventListener("resize", measureStoryTrackLoops);
+};
+
 const clearTimelineObserver = () => {
   if (!appState.timelineObserver) {
     return;
@@ -280,9 +589,29 @@ const setActiveTimelineItem = (albumIndex) => {
     return;
   }
 
+  let activeButton = null;
+
   regionTimelineNode.querySelectorAll(".timeline-link").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.albumIndex === String(albumIndex));
+    const isActive = button.dataset.albumIndex === String(albumIndex);
+    button.classList.toggle("is-active", isActive);
+
+    if (isActive) {
+      activeButton = button;
+    }
   });
+
+  if (!activeButton) {
+    return;
+  }
+
+  const timelineBounds = regionTimelineNode.getBoundingClientRect();
+  const buttonBounds = activeButton.getBoundingClientRect();
+  const isAboveViewport = buttonBounds.top < timelineBounds.top + 18;
+  const isBelowViewport = buttonBounds.bottom > timelineBounds.bottom - 18;
+
+  if (isAboveViewport || isBelowViewport) {
+    activeButton.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
 };
 
 const renderRegionTimeline = (albums) => {
@@ -530,11 +859,128 @@ const closeLightbox = () => {
   document.body.style.overflow = "";
 };
 
-const bindLightboxTriggers = () => {
-  document.querySelectorAll(".open-lightbox").forEach((button) => {
+const bindLightboxTriggers = (root = document) => {
+  root.querySelectorAll(".open-lightbox").forEach((button) => {
+    if (button.dataset.lightboxBound === "true") {
+      return;
+    }
+
+    button.dataset.lightboxBound = "true";
     button.addEventListener("click", () => openLightbox(button));
   });
 };
+
+const syncAlbumFrameLayout = (block, photo, imageNode) => {
+  if (!block || !photo || !imageNode) {
+    return;
+  }
+
+  const applyRatio = (ratio) => {
+    if (!Number.isFinite(ratio) || ratio <= 0) {
+      return;
+    }
+
+    photo.aspectRatio = ratio;
+    block.style.setProperty("--album-photo-ratio", ratio.toFixed(4));
+
+    const orientation =
+      ratio < 0.85 ? "portrait" : ratio > 1.35 ? "landscape" : "balanced";
+
+    block.dataset.photoOrientation = orientation;
+
+    const viewportWidth = window.innerWidth || 1440;
+    const viewportHeight = window.innerHeight || 900;
+    const isMobile = viewportWidth <= 760;
+
+    const targetHeight = Math.min(
+      isMobile ? viewportHeight * 0.34 : viewportHeight * 0.54,
+      isMobile ? 328 : 590
+    );
+
+    const minHeight = isMobile ? 238 : 392;
+    const resolvedHeight = Math.max(minHeight, targetHeight);
+
+    const padding = isMobile ? 10 : orientation === "portrait" ? 12 : 16;
+    const minWidth =
+      orientation === "portrait"
+        ? isMobile
+          ? 210
+          : 280
+        : orientation === "landscape"
+          ? isMobile
+            ? 250
+            : 420
+          : isMobile
+            ? 230
+            : 340;
+    const maxWidth =
+      orientation === "portrait"
+        ? isMobile
+          ? Math.min(viewportWidth - 56, 310)
+          : 460
+        : orientation === "landscape"
+          ? isMobile
+            ? viewportWidth - 44
+            : 920
+          : isMobile
+            ? Math.min(viewportWidth - 50, 350)
+            : 680;
+    const resolvedWidth = Math.max(
+      minWidth,
+      Math.min(maxWidth, resolvedHeight * ratio + padding * 2)
+    );
+
+    block.style.setProperty("--album-photo-max-height", `${Math.round(resolvedHeight)}px`);
+    block.style.setProperty("--album-photo-frame-width", `${Math.round(resolvedWidth)}px`);
+    block.style.setProperty("--album-photo-frame-padding", `${padding}px`);
+  };
+
+  if (photo.aspectRatio) {
+    applyRatio(photo.aspectRatio);
+    return;
+  }
+
+  const token = `${photo.src}::${Date.now()}`;
+  imageNode.dataset.layoutToken = token;
+
+  const updateFromImage = () => {
+    if (imageNode.dataset.layoutToken !== token) {
+      return;
+    }
+
+    applyRatio(imageNode.naturalWidth / imageNode.naturalHeight);
+  };
+
+  if (imageNode.complete && imageNode.naturalWidth) {
+    updateFromImage();
+    return;
+  }
+
+  imageNode.addEventListener("load", updateFromImage, { once: true });
+};
+
+const renderMasonryTiles = (album) =>
+  album.photos
+    .map(
+      (photo) => `
+        <button
+          class="masonry-tile open-lightbox"
+          data-image="${escapeHtml(photo.src)}"
+          data-title="${escapeHtml(photo.title)}"
+          data-meta="${escapeHtml(photo.metaLine)}"
+          data-gear="${escapeHtml(photo.gearLine)}"
+        >
+          <img
+            src="${escapeHtml(photo.src)}"
+            alt="${escapeHtml(photo.alt)}"
+            loading="lazy"
+            decoding="async"
+            fetchpriority="low"
+          />
+        </button>
+      `
+    )
+    .join("");
 
 const syncAlbumCarousel = (albumIndex, album, imageIndex) => {
   const block = regionGalleryNode.querySelector(`[data-album-block="${albumIndex}"]`);
@@ -557,6 +1003,7 @@ const syncAlbumCarousel = (albumIndex, album, imageIndex) => {
   mainButton.dataset.title = currentPhoto.title;
   mainButton.dataset.meta = currentPhoto.metaLine;
   mainButton.dataset.gear = currentPhoto.gearLine;
+  syncAlbumFrameLayout(block, currentPhoto, mainImage);
   counters.forEach((counter) => {
     counter.textContent = `${imageIndex + 1} / ${album.photos.length}`;
   });
@@ -691,6 +1138,13 @@ const setupAlbumInteractions = (albums) => {
 
     masonryToggle?.addEventListener("click", () => {
       const isExpanded = block.classList.toggle("is-masonry-open");
+
+      if (isExpanded && masonry && masonry.dataset.loaded !== "true") {
+        masonry.innerHTML = renderMasonryTiles(album);
+        masonry.dataset.loaded = "true";
+        bindLightboxTriggers(masonry);
+      }
+
       masonryToggle.textContent = isExpanded ? "收起本组照片" : "展开本组照片";
       masonry?.setAttribute("aria-hidden", String(!isExpanded));
     });
@@ -754,6 +1208,9 @@ const renderGallery = (area) => {
                 class="album-main-image"
                 src="${escapeHtml(album.photos[0]?.src)}"
                 alt="${escapeHtml(album.photos[0]?.alt)}"
+                loading="${albumIndex < 3 ? "eager" : "lazy"}"
+                decoding="async"
+                fetchpriority="${albumIndex === 0 ? "high" : albumIndex < 3 ? "auto" : "low"}"
               />
             </button>
             <button class="album-nav" data-action="next" aria-label="下一张">+</button>
@@ -777,6 +1234,9 @@ const renderGallery = (area) => {
                     <img
                       src="${escapeHtml(photo.src)}"
                       alt="${escapeHtml(photo.title || `${album.title} 缩略图 ${imageIndex + 1}`)}"
+                      loading="lazy"
+                      decoding="async"
+                      fetchpriority="low"
                     />
                   </button>
                 `
@@ -786,23 +1246,7 @@ const renderGallery = (area) => {
 
           <button class="album-masonry-toggle" type="button">展开本组照片</button>
 
-          <div class="album-masonry" aria-hidden="true">
-            ${album.photos
-              .map(
-                (photo, imageIndex) => `
-                  <button
-                    class="masonry-tile open-lightbox"
-                    data-image="${escapeHtml(photo.src)}"
-                    data-title="${escapeHtml(photo.title)}"
-                    data-meta="${escapeHtml(photo.metaLine)}"
-                    data-gear="${escapeHtml(photo.gearLine)}"
-                  >
-                    <img src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.alt)}" />
-                  </button>
-                `
-              )
-              .join("")}
-          </div>
+          <div class="album-masonry" aria-hidden="true" data-loaded="false"></div>
         </section>
       `
     )
@@ -822,7 +1266,7 @@ const renderCountryPanel = () => {
   regionTimelineNode.innerHTML = "";
   regionTimelineNode.hidden = true;
   breadcrumbNode.innerHTML = "";
-  areaTitleNode.textContent = "recent update";
+  areaTitleNode.textContent = "Recent Update";
 
   regionGalleryNode.innerHTML = `
     <section class="country-home-panel">
@@ -842,7 +1286,13 @@ const renderCountryPanel = () => {
                 data-level="${escapeHtml(jumpArea.level)}"
                 data-name="${escapeHtml(jumpArea.name)}"
               >
-                <img src="${escapeHtml(cover)}" alt="${escapeHtml(album.title)}" />
+                <img
+                  src="${escapeHtml(cover)}"
+                  alt="${escapeHtml(album.title)}"
+                  loading="lazy"
+                  decoding="async"
+                  fetchpriority="low"
+                />
                 <div class="country-quick-copy">
                   <p>${escapeHtml(album.meta || album.shotOn || "")}</p>
                   <h4>${escapeHtml(album.title || jumpArea.name)}</h4>
@@ -1015,6 +1465,13 @@ const buildFeatureMap = (features) => {
 };
 
 const fetchGeoJSON = async (adcode) => {
+  const normalizedAdcode = normalizeAdcode(adcode);
+
+  if (geoJSONCache.has(normalizedAdcode)) {
+    return geoJSONCache.get(normalizedAdcode);
+  }
+
+  const request = (async () => {
   const urls = getBoundaryUrls(adcode);
   let lastError = null;
 
@@ -1036,6 +1493,16 @@ const fetchGeoJSON = async (adcode) => {
   }
 
   throw lastError || new Error("地图数据请求失败");
+  })();
+
+  geoJSONCache.set(normalizedAdcode, request);
+
+  try {
+    return await request;
+  } catch (error) {
+    geoJSONCache.delete(normalizedAdcode);
+    throw error;
+  }
 };
 
 const loadArea = async (area, options = {}) => {
@@ -1191,6 +1658,7 @@ const revealObserver = new IntersectionObserver(
 
 revealItems.forEach((item) => revealObserver.observe(item));
 
+setupStoryCover();
 setupChart();
 
 if (appState.chart) {
