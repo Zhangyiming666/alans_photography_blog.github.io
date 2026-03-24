@@ -1229,6 +1229,7 @@ button {
   .album-main-button {
     min-height: calc(var(--album-photo-max-height) + (var(--album-photo-frame-padding) * 2));
     padding: var(--album-photo-frame-padding);
+    width: min(100%, var(--album-photo-frame-width));
   }
 
   .album-main-image {
@@ -1262,9 +1263,20 @@ button {
     order: 2;
   }
 
+  .region-panel-body.has-timeline {
+    grid-template-columns: 1fr;
+  }
+
   .region-panel-body {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+
+  .region-timeline {
+    display: none !important;
+    width: 0;
+    padding: 0;
+    border: 0;
   }
 
   .album-nav {

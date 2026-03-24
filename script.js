@@ -62,6 +62,7 @@ let pendingChartResizeFrame = 0;
 let storyTrackMotionFrame = 0;
 let storyTrackCurrentOffset = 0;
 let storyTrackTargetOffset = 0;
+let lastStoryScrollY = window.scrollY || 0;
 const STORY_TRACK_REPEATS = 5;
 
 const STORY_ROW_SETTINGS = [
@@ -554,6 +555,33 @@ const bindStoryWheelMotion = () => {
   window.addEventListener("wheel", onWheel, { passive: true });
 };
 
+const bindStoryScrollMotion = () => {
+  if (!coverStoryNode) {
+    return;
+  }
+
+  const onScroll = () => {
+    const nextScrollY = window.scrollY || 0;
+    const delta = nextScrollY - lastStoryScrollY;
+    lastStoryScrollY = nextScrollY;
+
+    if (!delta) {
+      return;
+    }
+
+    const bounds = coverStoryNode.getBoundingClientRect();
+    const isActive = bounds.top < window.innerHeight && bounds.bottom > 0;
+
+    if (!isActive) {
+      return;
+    }
+
+    nudgeStoryTrackMotion(delta * 1.3);
+  };
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+};
+
 const setupStoryCover = () => {
   if (!coverStoryNode || !storyBackdropNode || !storyStageNode) {
     return;
@@ -572,6 +600,7 @@ const setupStoryCover = () => {
     applyStoryTrackMotion();
   });
   bindStoryWheelMotion();
+  bindStoryScrollMotion();
   window.addEventListener("resize", measureStoryTrackLoops);
 };
 
@@ -620,6 +649,13 @@ const renderRegionTimeline = (albums) => {
   }
 
   clearTimelineObserver();
+
+  if (window.innerWidth <= 760) {
+    regionPanelBodyNode?.classList.remove("has-timeline");
+    regionTimelineNode.innerHTML = "";
+    regionTimelineNode.hidden = true;
+    return;
+  }
 
   if (!Array.isArray(albums) || albums.length <= 1) {
     regionPanelBodyNode?.classList.remove("has-timeline");
@@ -893,11 +929,11 @@ const syncAlbumFrameLayout = (block, photo, imageNode) => {
     const isMobile = viewportWidth <= 760;
 
     const targetHeight = Math.min(
-      isMobile ? viewportHeight * 0.34 : viewportHeight * 0.54,
-      isMobile ? 328 : 590
+      isMobile ? viewportHeight * 0.38 : viewportHeight * 0.54,
+      isMobile ? 360 : 590
     );
 
-    const minHeight = isMobile ? 238 : 392;
+    const minHeight = isMobile ? 252 : 392;
     const resolvedHeight = Math.max(minHeight, targetHeight);
 
     const padding = isMobile ? 10 : orientation === "portrait" ? 12 : 16;
@@ -916,14 +952,14 @@ const syncAlbumFrameLayout = (block, photo, imageNode) => {
     const maxWidth =
       orientation === "portrait"
         ? isMobile
-          ? Math.min(viewportWidth - 56, 310)
+          ? Math.min(viewportWidth - 30, 344)
           : 460
         : orientation === "landscape"
           ? isMobile
-            ? viewportWidth - 44
+            ? viewportWidth - 24
             : 920
           : isMobile
-            ? Math.min(viewportWidth - 50, 350)
+            ? Math.min(viewportWidth - 28, 382)
             : 680;
     const resolvedWidth = Math.max(
       minWidth,
