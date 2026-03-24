@@ -1,9 +1,0 @@
-<svg width="1600" height="800" viewBox="0 0 1600 800" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1600" height="800" fill="#F1E9DB"/>
-  <rect width="1600" height="430" fill="#D9D3C9"/>
-  <rect y="430" width="1600" height="370" fill="#E8F0EF"/>
-  <path d="M0 505C229 450 411 431 620 437C928 446 1187 526 1600 481V800H0V505Z" fill="#BACFD0"/>
-  <path d="M0 367C293 328 453 333 701 347C1018 365 1261 379 1600 336V430H0V367Z" fill="#C8B7A5"/>
-  <circle cx="1228" cy="136" r="72" fill="#FFF9EF"/>
-  <text x="98" y="708" fill="#6A777B" font-size="50" font-family="Georgia, serif">salt lake silence</text>
-</svg>
