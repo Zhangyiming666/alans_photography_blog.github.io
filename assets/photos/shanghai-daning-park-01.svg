@@ -1,0 +1,28 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="44" fill="#FFF5F2"/>
+  <rect width="1200" height="900" rx="44" fill="url(#paint0_linear_10_1)"/>
+  <ellipse cx="252" cy="780" rx="250" ry="202" fill="#F36C7D" fill-opacity="0.9"/>
+  <ellipse cx="578" cy="724" rx="240" ry="188" fill="#FF9A7A" fill-opacity="0.72"/>
+  <ellipse cx="888" cy="770" rx="246" ry="196" fill="#F84E67" fill-opacity="0.85"/>
+  <ellipse cx="1064" cy="540" rx="164" ry="152" fill="#FFB6AC" fill-opacity="0.9"/>
+  <ellipse cx="190" cy="504" rx="174" ry="156" fill="#FF8EA1" fill-opacity="0.82"/>
+  <rect y="646" width="1200" height="254" fill="#234C2F"/>
+  <path d="M0 690C118 662.667 224 648.667 318 648C412 647.333 516 664 630 698C744 732 846 742.667 936 730C1026 717.333 1114 690.667 1200 650V900H0V690Z" fill="#2F6A3D"/>
+  <path d="M74 796L128 900" stroke="#7DB271" stroke-width="12" stroke-linecap="round"/>
+  <path d="M244 772L284 900" stroke="#8FC57F" stroke-width="12" stroke-linecap="round"/>
+  <path d="M424 740L462 900" stroke="#90C27E" stroke-width="12" stroke-linecap="round"/>
+  <path d="M650 752L704 900" stroke="#7CAF72" stroke-width="12" stroke-linecap="round"/>
+  <path d="M876 738L934 900" stroke="#94C77D" stroke-width="12" stroke-linecap="round"/>
+  <path d="M1018 784L1064 900" stroke="#86BC74" stroke-width="12" stroke-linecap="round"/>
+  <text x="88" y="112" fill="#FFFFFF" font-family="'Avenir Next','PingFang SC',sans-serif" font-size="34" letter-spacing="6">SHANGHAI · DANING PARK</text>
+  <text x="88" y="180" fill="#FFFFFF" font-family="'Baskerville','Songti SC',serif" font-size="72">郁金香花海</text>
+  <text x="88" y="236" fill="#FFF1EF" font-family="'PingFang SC',sans-serif" font-size="28">2026.03.15 · 上海市静安区 · 大宁公园</text>
+  <text x="88" y="822" fill="#FCE6DE" font-family="'PingFang SC',sans-serif" font-size="28">FUJIFILM X-H2 · FUJINON XF 16-55mm</text>
+  <defs>
+    <linearGradient id="paint0_linear_10_1" x1="72" y1="78" x2="1134" y2="878" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F26E73"/>
+      <stop offset="0.44" stop-color="#FF8CAB"/>
+      <stop offset="1" stop-color="#FFC89C"/>
+    </linearGradient>
+  </defs>
+</svg>

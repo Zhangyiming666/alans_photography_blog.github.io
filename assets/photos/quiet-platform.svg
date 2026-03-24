@@ -1,0 +1,13 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#DAD7D0"/>
+  <rect width="1200" height="310" fill="#4A5D73"/>
+  <rect y="310" width="1200" height="590" fill="#9DA8AF"/>
+  <path d="M0 466H1200" stroke="#F2E6D2" stroke-width="18"/>
+  <path d="M0 564H1200" stroke="#F2E6D2" stroke-width="10"/>
+  <path d="M0 720L1200 610" stroke="#2A3139" stroke-width="22"/>
+  <rect x="216" y="198" width="112" height="438" rx="12" fill="#2A3139"/>
+  <rect x="520" y="156" width="112" height="480" rx="12" fill="#2A3139"/>
+  <rect x="848" y="222" width="112" height="414" rx="12" fill="#2A3139"/>
+  <circle cx="570" cy="576" r="32" fill="#F2E6D2"/>
+  <text x="88" y="822" fill="#F8F1E5" font-size="52" font-family="Georgia, serif">quiet platform</text>
+</svg>

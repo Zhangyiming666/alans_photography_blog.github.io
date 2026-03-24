@@ -1,0 +1,21 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="44" fill="#FFF5F7"/>
+  <rect width="1200" height="900" rx="44" fill="url(#paint0_linear_30_1)"/>
+  <rect y="610" width="1200" height="290" fill="#25553B"/>
+  <ellipse cx="320" cy="520" rx="230" ry="176" fill="#FFD3E0" fill-opacity="0.92"/>
+  <ellipse cx="786" cy="472" rx="300" ry="192" fill="#F85371" fill-opacity="0.92"/>
+  <ellipse cx="1020" cy="722" rx="184" ry="132" fill="#FFB1BD" fill-opacity="0.84"/>
+  <ellipse cx="146" cy="738" rx="132" ry="102" fill="#E9414D" fill-opacity="0.9"/>
+  <path d="M0 682C164 654.667 316 646 456 656C596 666 744 692 900 734C1020 766 1120 772 1200 752V900H0V682Z" fill="#2D6A48"/>
+  <text x="88" y="112" fill="#FFFFFF" font-family="'Avenir Next','PingFang SC',sans-serif" font-size="34" letter-spacing="6">SHANGHAI · DANING PARK</text>
+  <text x="88" y="180" fill="#FFFFFF" font-family="'Baskerville','Songti SC',serif" font-size="72">粉白与猩红</text>
+  <text x="88" y="236" fill="#FFE0E5" font-family="'PingFang SC',sans-serif" font-size="28">2026.03.15 · 上海市静安区 · 大宁公园</text>
+  <text x="88" y="822" fill="#E1F0E8" font-family="'PingFang SC',sans-serif" font-size="28">FUJIFILM X-H2 · FUJINON XF 16-55mm</text>
+  <defs>
+    <linearGradient id="paint0_linear_30_1" x1="96" y1="74" x2="1112" y2="842" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F07C96"/>
+      <stop offset="0.42" stop-color="#FFC7D0"/>
+      <stop offset="1" stop-color="#FF6C77"/>
+    </linearGradient>
+  </defs>
+</svg>
