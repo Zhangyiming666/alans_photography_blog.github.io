@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>China Photo Atlas | 中国行政区摄影地图</title>
+    <meta
+      name="description"
+      content="基于真实中国行政区划边界的摄影作品地图，可逐级下钻到省、市、区县。"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="brand" href="#top">
+          <span class="brand-mark">CP</span>
+          <span class="brand-text">
+            <strong>China Photo Atlas</strong>
+            <small>Real China Administrative Map</small>
+          </span>
+        </a>
+        <nav class="site-nav">
+          <a href="#atlas">地图</a>
+          <a href="#notes">说明</a>
+          <a href="#contact">联系</a>
+        </nav>
+      </header>
+
+      <main id="top">
+        <section class="hero reveal">
+          <div class="hero-copy">
+            <p class="eyebrow">真实行政区摄影地图</p>
+            <h1>用真实的中国行政区划来浏览你的照片。</h1>
+            <p class="hero-text">
+              这版已经换成真实中国地图，并支持按行政区逐级下钻。默认是全国视图，点击省会进入省级，
+              再继续点击城市或区县查看更细的区域。右侧面板会同步更新当前区域信息和作品卡片。
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#atlas">打开地图</a>
+              <a class="button button-secondary" href="#notes">查看接入方式</a>
+            </div>
+          </div>
+
+          <div class="hero-summary">
+            <article>
+              <span>中国</span>
+              <p>全国视图起点</p>
+            </article>
+            <article>
+              <span>省 / 市 / 区</span>
+              <p>逐级下钻到区县层</p>
+            </article>
+            <article>
+              <span>真实边界</span>
+              <p>运行时加载真实 GeoJSON 行政区数据</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="atlas reveal" id="atlas">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">地图舞台</p>
+              <h2>全国、省、市、区县逐级切换</h2>
+            </div>
+            <div class="map-toolbar" aria-label="地图操作">
+              <button class="map-control" id="zoomOutButton" aria-label="缩小">-</button>
+              <button class="map-control" id="zoomInButton" aria-label="放大">+</button>
+              <button class="map-control map-control-wide" id="resetViewButton">重置视图</button>
+              <button class="map-control map-control-wide" id="backButton">返回上一级</button>
+            </div>
+          </div>
+
+          <div class="atlas-layout">
+            <div class="map-stage">
+              <div class="map-stage-overlay">
+                <span>真实行政区边界</span>
+                <span>点击区域继续下钻</span>
+                <span>滚轮或按钮缩放</span>
+              </div>
+              <div class="map-status" id="mapStatus">正在加载全国行政区数据…</div>
+              <div class="real-map" id="chinaMap" aria-label="中国行政区摄影地图"></div>
+            </div>
+
+            <aside class="region-panel">
+              <div class="breadcrumb" id="breadcrumb"></div>
+
+              <div class="region-panel-header">
+                <p class="eyebrow" id="areaLevel">全国视图</p>
+                <h3 id="areaTitle">中国</h3>
+                <p class="region-meta" id="areaMeta">行政区代码 100000</p>
+                <p class="region-description" id="areaDescription">
+                  点击地图进入省级，再继续点击城市或区县。你可以把照片绑定到任意行政区代码上，
+                  让作品按真实区域组织，而不是手工摆点。
+                </p>
+              </div>
+
+              <div class="region-stats" id="areaStats"></div>
+              <div class="region-hint" id="areaHint"></div>
+              <div class="region-gallery" id="regionGallery"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="notes reveal" id="notes">
+          <div class="story-copy">
+            <p class="eyebrow">这版的特点</p>
+            <h2>现在已经不是示意图，而是真实行政区地图底图。</h2>
+          </div>
+          <div class="story-grid">
+            <article>
+              <span>01</span>
+              <h3>真实 GeoJSON 边界</h3>
+              <p>地图区域来自真实行政区划边界数据，省、市、区县能逐级切换。</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>按 adcode 绑定作品</h3>
+              <p>每个地区都有行政区代码，后面接你的真实照片时会更稳定。</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>适合继续接数据源</h3>
+              <p>后续可以把照片列表改成从 JSON、数据库或 CMS 自动生成。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="contact reveal" id="contact">
+          <div>
+            <p class="eyebrow">下一步</p>
+            <h2>如果你给我真实照片和地区清单，我可以继续帮你把这张地图接成你的作品库。</h2>
+          </div>
+          <div class="contact-card">
+            <p>当前接法</p>
+            <a href="#">ECharts + 实时行政区边界 GeoJSON</a>
+            <p>适合的项目</p>
+            <a href="#">旅行摄影 / 城市拍摄 / 长期地理档案 / 区域专题</a>
+            <p class="contact-tip">
+              这版依赖外部地图数据服务和 ECharts CDN。若浏览器直接打开本地文件时拦截请求，
+              用一个简单的本地静态服务启动即可。
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="lightbox" aria-hidden="true">
+      <button class="lightbox-backdrop" aria-label="关闭预览"></button>
+      <div class="lightbox-dialog" role="dialog" aria-modal="true" aria-label="作品预览">
+        <button class="lightbox-close" aria-label="关闭预览">+</button>
+        <img class="lightbox-image" src="" alt="" />
+        <div class="lightbox-copy">
+          <p class="lightbox-meta"></p>
+          <h3 class="lightbox-title"></h3>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>
