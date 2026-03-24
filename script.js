@@ -1,4 +1,7 @@
-const GEO_BASE_URL = "https://geo.datav.aliyun.com/areas_v3/bound";
+const GEO_DATA_SOURCES = [
+  "./data/maps",
+  "https://geo.datav.aliyun.com/areas_v3/bound",
+];
 
 const albumCatalog = {
   "100000": [
@@ -182,7 +185,8 @@ const getStatsForArea = (area) => {
   ];
 };
 
-const getBoundaryUrl = (adcode) => `${GEO_BASE_URL}/${adcode}_full.json`;
+const getBoundaryUrls = (adcode) =>
+  GEO_DATA_SOURCES.map((baseUrl) => `${baseUrl}/${adcode}_full.json`);
 
 const normalizeAdcode = (value) => String(value || "");
 
@@ -523,13 +527,27 @@ const buildFeatureMap = (features) => {
 };
 
 const fetchGeoJSON = async (adcode) => {
-  const response = await fetch(getBoundaryUrl(adcode));
+  const urls = getBoundaryUrls(adcode);
+  let lastError = null;
 
-  if (!response.ok) {
-    throw new Error(`地图数据请求失败: ${response.status}`);
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, {
+        referrerPolicy: "no-referrer",
+      });
+
+      if (!response.ok) {
+        lastError = new Error(`地图数据请求失败: ${response.status} @ ${url}`);
+        continue;
+      }
+
+      return response.json();
+    } catch (error) {
+      lastError = error;
+    }
   }
 
-  return response.json();
+  throw lastError || new Error("地图数据请求失败");
 };
 
 const loadArea = async (area, options = {}) => {
