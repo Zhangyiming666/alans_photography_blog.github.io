@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="260" height="322" viewBox="0 0 260 322">
+<rect width="100%" height="100%" fill="#f4f7f8"/>
+<text x="20" y="32" font-size="26" font-family="PingFang SC, Helvetica, Arial" fill="#13212b">天安门</text>
+<text x="20" y="58" font-size="14" font-family="PingFang SC, Helvetica, Arial" fill="#607181">东城区 · 2025.10.25</text>
+<clipPath id="clip0"><rect x="20" y="80" rx="14" ry="14" width="220" height="160"/></clipPath>
+<rect x="20" y="80" rx="14" ry="14" width="220" height="160" fill="#dfe7eb" stroke="#d0d9de"/>
+<image xlink:href="file:///Users/azhangyiming666/Downloads/Codex/assets/photos/04db28f222d0a85d041c796ad7e5d843.jpg" href="file:///Users/azhangyiming666/Downloads/Codex/assets/photos/04db28f222d0a85d041c796ad7e5d843.jpg" x="20" y="80" width="220" height="160" preserveAspectRatio="xMidYMid slice" clip-path="url(#clip0)"/>
+<text x="28" y="258" font-size="14" font-family="Menlo, Monaco, monospace" fill="#13212b">1. 04db28f222d0a85d041c796ad7e5d843.jpg</text>
+<text x="28" y="275" font-size="11" font-family="PingFang SC, Helvetica, Arial" fill="#607181"></text>
+</svg>
