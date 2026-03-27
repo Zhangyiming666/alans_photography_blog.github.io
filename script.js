@@ -102,8 +102,8 @@ const themeMediaQuery =
     ? window.matchMedia("(prefers-color-scheme: dark)")
     : null;
 const ENABLE_DESKTOP_MAP_PERFORMANCE_MODE = true;
-const STORY_TRACK_REPEATS = 3;
-const STORY_COVER_MAX_ITEMS = 30;
+const STORY_TRACK_REPEATS = 5;
+const STORY_COVER_MAX_ITEMS = 50;
 
 const STORY_ROW_SETTINGS = [
   { speed: -0.7, lift: -34 },
