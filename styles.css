@@ -776,16 +776,18 @@ button::-moz-focus-inner {
 .tag-photo-visual {
   display: block;
   padding: 0;
+  aspect-ratio: 4 / 3;
   border-radius: 4px;
-  background: rgba(240, 245, 248, 0.4);
+  background:
+    linear-gradient(145deg, rgba(232, 240, 246, 0.85), rgba(219, 231, 239, 0.7));
   overflow: hidden;
 }
 
 .tag-photo-visual img {
   width: 100%;
-  height: auto;
+  height: 100%;
   border-radius: 0;
-  aspect-ratio: auto;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
   box-shadow: none;
 }

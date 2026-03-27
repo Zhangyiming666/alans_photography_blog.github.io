@@ -81,6 +81,8 @@ const appState = {
   loadingCatalogChunks: new Map(),
   galleryRenderToken: 0,
   tagAtlasDataRequested: false,
+  hasWarmedCatalogChunks: false,
+  normalizedAlbumCacheByArea: new Map(),
 };
 
 const geoJSONCache = new Map();
@@ -395,6 +397,7 @@ const buildResponsiveImage = ({
   decoding = "async",
   fetchpriority = "low",
   variant = "display",
+  useSrcSet = true,
 }) => {
   const normalizedSrc = String(src || "");
 
@@ -404,7 +407,7 @@ const buildResponsiveImage = ({
 
   const resolvedClassName = className ? ` class="${escapeHtml(className)}"` : "";
   const resolvedSrc = getPhotoVariantSrc(normalizedSrc, variant);
-  const srcSet = buildImageSrcSet(normalizedSrc);
+  const srcSet = useSrcSet ? buildImageSrcSet(normalizedSrc) : "";
   const sourceMarkup = srcSet
     ? `<source srcset="${srcSet}" sizes="${escapeHtml(sizeHint)}" />`
     : "";
@@ -431,6 +434,7 @@ const resetDerivedCatalogCaches = () => {
   appState.allTaggedPhotos = null;
   appState.tagCollections = null;
   appState.tagCategoryCollections = null;
+  appState.normalizedAlbumCacheByArea = new Map();
 };
 
 const rebuildCatalogAlbums = () => {
@@ -538,6 +542,34 @@ const ensureAllCatalogChunksLoaded = async () => {
 const areAllCatalogChunksLoaded = () =>
   !CATALOG_CHUNK_KEYS.length ||
   CATALOG_CHUNK_KEYS.every((chunkKey) => appState.loadedCatalogChunks.has(chunkKey));
+
+const scheduleCatalogChunkWarmup = () => {
+  if (appState.hasWarmedCatalogChunks || !CATALOG_CHUNK_KEYS.length) {
+    return;
+  }
+
+  const prefersSaveData = Boolean(navigator.connection?.saveData);
+
+  if (prefersSaveData) {
+    return;
+  }
+
+  appState.hasWarmedCatalogChunks = true;
+  const runWarmup = () => {
+    ensureAllCatalogChunksLoaded().catch((error) => {
+      console.error(error);
+    });
+  };
+
+  if ("requestIdleCallback" in window) {
+    window.setTimeout(() => {
+      window.requestIdleCallback(runWarmup, { timeout: 1800 });
+    }, 800);
+    return;
+  }
+
+  window.setTimeout(runWarmup, 1200);
+};
 
 const isMobilePerformanceMode = () =>
   window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
@@ -1029,6 +1061,18 @@ const normalizeAlbum = (album, area) => {
   };
 };
 
+const getNormalizedAlbumForArea = (album, area) => {
+  const cacheKey = `${normalizeAdcode(area.adcode)}::${album.catalogKey || getAlbumKey(album, "")}`;
+
+  if (appState.normalizedAlbumCacheByArea.has(cacheKey)) {
+    return appState.normalizedAlbumCacheByArea.get(cacheKey);
+  }
+
+  const normalized = normalizeAlbum(album, area);
+  appState.normalizedAlbumCacheByArea.set(cacheKey, normalized);
+  return normalized;
+};
+
 const getAlbumsForArea = (area) => {
   const normalizedAreaAdcode = normalizeAdcode(area.adcode);
   const mergedAlbums = getCatalogAlbums().filter((album) => {
@@ -1055,8 +1099,7 @@ const getAlbumsForArea = (area) => {
       }
 
       return getAlbumKey(left, "").localeCompare(getAlbumKey(right, ""), "zh-CN");
-    })
-    .map((album) => normalizeAlbum(album, area));
+    });
 };
 
 const renderStoryBackdrop = (photos) => {
@@ -1897,6 +1940,7 @@ const renderTagPhotoCard = (photo, index) => `
         loading: "lazy",
         fetchpriority: "low",
         variant: "thumb",
+        useSrcSet: false,
       })}
     </div>
     <div class="tag-photo-copy">
@@ -2408,6 +2452,7 @@ const renderMasonryTiles = (album) =>
             loading: "lazy",
             fetchpriority: "low",
             variant: "thumb",
+            useSrcSet: false,
           })}
         </button>
       `
@@ -2701,6 +2746,7 @@ const renderAlbumBlock = (album, albumIndex) => {
                   loading: "lazy",
                   fetchpriority: "low",
                   variant: "thumb",
+                  useSrcSet: false,
                 })}
               </button>
             `
@@ -2716,11 +2762,11 @@ const renderAlbumBlock = (album, albumIndex) => {
 };
 
 const renderGallery = (area) => {
-  const albums = getAlbumsForArea(area);
+  const rawAlbums = getAlbumsForArea(area);
   appState.galleryRenderToken += 1;
   const renderToken = appState.galleryRenderToken;
 
-  if (!albums.length) {
+  if (!rawAlbums.length) {
     clearTimelineObserver();
     regionPanelBodyNode?.classList.remove("has-timeline");
     regionTimelineNode.innerHTML = "";
@@ -2734,15 +2780,17 @@ const renderGallery = (area) => {
   }
 
   const renderAlbumRange = (startIndex, endIndexExclusive) =>
-    albums
+    rawAlbums
       .slice(startIndex, endIndexExclusive)
-      .map((album, offset) => renderAlbumBlock(album, startIndex + offset))
+      .map((album, offset) => renderAlbumBlock(getNormalizedAlbumForArea(album, area), startIndex + offset))
       .join("");
 
-  const initialCount = Math.min(albums.length, INITIAL_GALLERY_ALBUM_BATCH);
+  const initialCount = Math.min(rawAlbums.length, INITIAL_GALLERY_ALBUM_BATCH);
   regionGalleryNode.innerHTML = renderAlbumRange(0, initialCount);
-  setupAlbumInteractions(albums.slice(0, initialCount), { startIndex: 0 });
-  renderRegionTimeline(albums);
+  setupAlbumInteractions(rawAlbums.slice(0, initialCount).map((album) => getNormalizedAlbumForArea(album, area)), {
+    startIndex: 0,
+  });
+  renderRegionTimeline(rawAlbums);
   scheduleAlbumLayoutSync();
 
   const appendNextBatch = (startIndex) => {
@@ -2750,16 +2798,19 @@ const renderGallery = (area) => {
       return;
     }
 
-    if (startIndex >= albums.length) {
-      renderRegionTimeline(albums);
+    if (startIndex >= rawAlbums.length) {
+      renderRegionTimeline(rawAlbums);
       scheduleAlbumLayoutSync();
       return;
     }
 
-    const endIndex = Math.min(startIndex + GALLERY_ALBUM_BATCH_SIZE, albums.length);
+    const endIndex = Math.min(startIndex + GALLERY_ALBUM_BATCH_SIZE, rawAlbums.length);
     regionGalleryNode.insertAdjacentHTML("beforeend", renderAlbumRange(startIndex, endIndex));
-    setupAlbumInteractions(albums.slice(startIndex, endIndex), { startIndex });
-    renderRegionTimeline(albums);
+    setupAlbumInteractions(
+      rawAlbums.slice(startIndex, endIndex).map((album) => getNormalizedAlbumForArea(album, area)),
+      { startIndex }
+    );
+    renderRegionTimeline(rawAlbums);
     scheduleAlbumLayoutSync();
 
     const scheduleNext = () => appendNextBatch(endIndex);
@@ -2772,7 +2823,7 @@ const renderGallery = (area) => {
     window.setTimeout(scheduleNext, 72);
   };
 
-  if (albums.length > initialCount) {
+  if (rawAlbums.length > initialCount) {
     const startDeferredAppend = () => appendNextBatch(initialCount);
 
     if ("requestIdleCallback" in window) {
@@ -2822,6 +2873,7 @@ const renderCountryPanel = () => {
                   loading: "lazy",
                   fetchpriority: "low",
                   variant: "thumb",
+                  useSrcSet: false,
                 })}
                 <div class="country-quick-copy">
                   <p>${escapeHtml(album.meta || album.shotOn || "")}</p>
@@ -3097,6 +3149,9 @@ const loadArea = async (area, options = {}) => {
       });
     }
     setStatus(`${area.name} · 已加载 ${features.length} 个区域`);
+    if (area.adcode === "100000") {
+      scheduleCatalogChunkWarmup();
+    }
   } catch (error) {
     setStatus("地图加载失败");
     console.error(error);
