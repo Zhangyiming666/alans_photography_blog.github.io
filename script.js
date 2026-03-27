@@ -450,6 +450,7 @@ const buildResponsiveImage = ({
   fetchpriority = "low",
   variant = "display",
   useSrcSet = true,
+  fallbackSrc = "",
 }) => {
   const normalizedSrc = String(src || "");
 
@@ -473,6 +474,8 @@ const buildResponsiveImage = ({
         loading="${escapeHtml(loading)}"
         decoding="${escapeHtml(decoding)}"
         fetchpriority="${escapeHtml(fetchpriority)}"
+        data-full-src="${escapeHtml(normalizedSrc)}"
+        ${fallbackSrc ? `data-fallback-src="${escapeHtml(fallbackSrc)}"` : ""}
       />
     </picture>
   `;
@@ -1989,10 +1992,11 @@ const renderTagPhotoCard = (photo, index) => `
         src: photo.src,
         alt: photo.alt || photo.albumTitle,
         sizeHint: "(max-width: 760px) 44vw, (max-width: 1200px) 30vw, 280px",
-        loading: "lazy",
-        fetchpriority: "low",
+        loading: index < 14 ? "eager" : "lazy",
+        fetchpriority: index < 6 ? "high" : index < 14 ? "auto" : "low",
         variant: "thumb",
         useSrcSet: false,
+        fallbackSrc: getPhotoVariantSrc(photo.src, "display"),
       })}
     </div>
     <div class="tag-photo-copy">
@@ -2505,6 +2509,7 @@ const renderMasonryTiles = (album) =>
             fetchpriority: "low",
             variant: "thumb",
             useSrcSet: false,
+            fallbackSrc: getPhotoVariantSrc(photo.src, "display"),
           })}
         </button>
       `
@@ -2801,6 +2806,7 @@ const renderAlbumBlock = (album, albumIndex) => {
                   fetchpriority: "low",
                   variant: "thumb",
                   useSrcSet: false,
+                  fallbackSrc: getPhotoVariantSrc(photo.src, "display"),
                 })}
               </button>
             `
@@ -2928,6 +2934,7 @@ const renderCountryPanel = () => {
                   fetchpriority: "low",
                   variant: "thumb",
                   useSrcSet: false,
+                  fallbackSrc: getPhotoVariantSrc(cover, "display"),
                 })}
                 <div class="country-quick-copy">
                   <p>${escapeHtml(album.meta || album.shotOn || "")}</p>
@@ -3360,6 +3367,35 @@ document.addEventListener("keydown", (event) => {
     closeLightbox();
   }
 });
+
+document.addEventListener(
+  "error",
+  (event) => {
+    const target = event.target;
+
+    if (!(target instanceof HTMLImageElement)) {
+      return;
+    }
+
+    const nextFallbackSrc = target.dataset.fallbackSrc || "";
+
+    if (!nextFallbackSrc) {
+      return;
+    }
+
+    const fullSrc = target.dataset.fullSrc || "";
+    target.removeAttribute("srcset");
+    target.removeAttribute("sizes");
+    target.src = nextFallbackSrc;
+
+    if (fullSrc && nextFallbackSrc !== fullSrc) {
+      target.dataset.fallbackSrc = fullSrc;
+    } else {
+      delete target.dataset.fallbackSrc;
+    }
+  },
+  true
+);
 
 const revealObserver = new IntersectionObserver(
   (entries) => {
