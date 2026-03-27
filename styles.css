@@ -242,8 +242,8 @@ button::-moz-focus-inner {
   inset: 0;
   display: grid;
   gap: 10px;
-  align-content: center;
-  padding: 56px 18px;
+  align-content: start;
+  padding: 18px 18px 44px;
   overflow: hidden;
 }
 
@@ -2203,7 +2203,7 @@ button::-moz-focus-inner {
 
   .story-cover-backdrop {
     gap: 14px;
-    padding: 28px 12px;
+    padding: 14px 12px 24px;
   }
 
   .story-photo-frame {
