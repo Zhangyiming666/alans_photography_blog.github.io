@@ -1988,16 +1988,15 @@ const renderTagPhotoCard = (photo, index) => `
     data-tags="${escapeHtml(serializeTags(photo.tags))}"
   >
     <div class="tag-photo-visual">
-      ${buildResponsiveImage({
-        src: photo.src,
-        alt: photo.alt || photo.albumTitle,
-        sizeHint: "(max-width: 760px) 44vw, (max-width: 1200px) 30vw, 280px",
-        loading: index < 14 ? "eager" : "lazy",
-        fetchpriority: index < 6 ? "high" : index < 14 ? "auto" : "low",
-        variant: "thumb",
-        useSrcSet: false,
-        fallbackSrc: getPhotoVariantSrc(photo.src, "display"),
-      })}
+      <img
+        src="${escapeHtml(getPhotoVariantSrc(photo.src, "thumb"))}"
+        alt="${escapeHtml(photo.alt || photo.albumTitle)}"
+        loading="${index < 14 ? "eager" : "lazy"}"
+        decoding="async"
+        fetchpriority="${index < 6 ? "high" : index < 14 ? "auto" : "low"}"
+        data-fallback-src="${escapeHtml(getPhotoVariantSrc(photo.src, "display"))}"
+        data-full-src="${escapeHtml(photo.src)}"
+      />
     </div>
     <div class="tag-photo-copy">
       <p class="tag-photo-meta">${escapeHtml([photo.shotOn, photo.albumTitle].filter(Boolean).join(" · "))}</p>
